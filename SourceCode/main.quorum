@@ -1,0 +1,239 @@
+use Libraries.Game.Game
+use Libraries.Game.Graphics.Model
+use Libraries.Game.Graphics.Color
+use Libraries.Interface.Events.CollisionListener3D
+use Libraries.Interface.Events.CollisionEvent3D
+use Libraries.Sound.Audio
+use Libraries.Game.Graphics.DirectionalLight
+use Libraries.Game.Graphics.AmbientLight
+use Libraries.Compute.Vector3
+use Libraries.Game.Graphics.Camera
+use Libraries.Game.InputMonitor
+use Libraries.Interface.Events.KeyboardEvent
+use Libraries.Compute.Random
+use Libraries.Game.Graphics.Drawable
+use Libraries.Game.Audio3D
+
+
+
+
+class Main is Game, CollisionListener3D
+    Camera camera = undefined
+   Model ground
+   Model ball
+    Model paddle
+    Model paddle2
+    Model left
+    Model right
+    Model top
+    Model bottom
+   Audio d3
+   Audio splat
+    Audio chime
+    Audio plop
+    Audio3D beep
+   Color color
+   Vector3 force
+   Vector3 velocity
+    Vector3 torque
+    Vector3 moveUp
+    Vector3 moveDown
+    InputMonitor monitor
+    KeyboardEvent keys
+    Random random
+    number player = 0
+    number computer = 0
+
+   action Main
+        StartGame()
+   end
+
+   action CreateGame
+
+        EnablePhysics3D(true)
+        chime:Load("media/Ding1.wav")
+        plop:Load("media/smallPlop.wav")
+        d3:Load("media/Ding3.wav")
+        splat:Load("media/splat.wav")
+        beep:Load("media/Ding2.wav")
+        beep:EnableListenerDoppler()
+
+
+        
+        force:Set(random:RandomIntegerBetween(-5, 5), random:RandomIntegerBetween(-5, 5), 0)
+        velocity:Set(3, 5, 0)
+        torque:Set(0, 200, 0)
+        camera = GetCamera3D()
+        camera:SetPosition(0, 0, -15)
+        camera:LookAt(0, 0, 0)
+
+
+        DirectionalLight light
+        light:SetColor(0.8, 0.8, 0.8, 1)
+        light:SetDirection(GetCamera3D():GetDirection())
+        Add(light)
+
+        AmbientLight ambient
+        ambient:SetColor(0.4, 0.4, 0.4, 1)
+        SetAmbientLight(ambient)
+
+
+//       ground:SetName("Ground")
+//       ground:LoadBox(15, 15, 1, color:Green())
+ //      ground:SetPosition(0, 0, 5)
+ //      ground:Rotate(1, 0, 0, 90)
+ //      Add(ground)
+ //      ground:EnablePhysics(true)
+ //      ground:SetUnmovable()
+
+       ball:SetName("Ball")
+       ball:LoadSphere(1, 1, 1, "media/bunny.png")
+       ball:SetPosition(0,1,0)
+       Add(ball)
+       ball:EnablePhysics(true)
+       //ball:Add(beep)
+       beep:Play()
+       ball:SetMass(0.1)
+       ball:SetResponsive()
+       ball:ApplyTorque(torque)
+       ball:SetLinearVelocity(velocity)
+       ball:ApplyForceToCenter(force)
+
+       paddle:SetName("Computer Paddle")
+       paddle:LoadBox(1, 5, 0.5, color:White())
+       paddle:SetPosition(-12.5, 0, 0)
+       Add(paddle)
+       paddle:EnablePhysics(true)
+       paddle:SetFriction(0.1)
+       paddle:SetRestitution(1)
+       paddle:SetNonResponsive()
+
+       paddle2:SetName("Player Paddle")
+       paddle2:LoadBox(1, 5, 0.5, color:White())
+       paddle2:SetPosition(12.5, 0, 0)
+       Add(paddle2)
+       paddle2:EnablePhysics(true)
+       paddle2:SetFriction(0.1)
+       paddle2:SetRestitution(1)
+       paddle2:SetNonResponsive()
+
+       left:SetName("Left Wall")
+       left:LoadBox(1, 25, 0, color:Black())
+       left:SetPosition(-13, 0, 0)
+       Add(left)
+       left:EnablePhysics(true)
+       left:SetFriction(0.25)
+       left:SetUnmovable()
+       
+       right:SetName("Right Wall")
+       right:LoadBox(1, 25, 0, color:Black())
+       right:SetPosition(13, 0, 0)
+       Add(right)
+       right:EnablePhysics(true)
+       right:SetFriction(0.25)
+       right:SetUnmovable()
+
+       top:SetName("Ceiling")
+       top:LoadBox(60, 1, 0, color:Black())
+       top:SetPosition(-12, 10, 0)
+       Add(top)
+       top:EnablePhysics(true)
+       top:SetFriction(0.1)
+       top:SetRestitution(1.1)
+       top:SetUnmovable()
+
+       bottom:SetName("Floor")
+       bottom:LoadBox(60, 1, 0, color:Black())
+       bottom:SetPosition(-12, -10, 0)
+       Add(bottom)
+       bottom:EnablePhysics(true)
+       bottom:SetFriction(0.1)
+       bottom:SetRestitution(1.1)
+       bottom:SetUnmovable()
+
+       AddCollisionListener(me)
+   end
+
+    action Update(number seconds)
+        if ball:GetX() <= -11.5
+            if ball:GetY() < 0
+                paddle:SetPosition(-12.5, (ball:GetY()-random:RandomIntegerBetween(-7, 7)), 0)
+            else
+                paddle:SetPosition(-12.5, (ball:GetY() + random:RandomIntegerBetween(-7, 7)), 0)
+            end
+        end
+
+        if monitor:IsKeyPressed(keys:UP)
+            paddle2:Move(0, 10*seconds, 0)
+        elseif monitor:IsKeyPressed(keys:DOWN)
+            paddle2:Move(0, -10*seconds, 0)
+        end
+        
+        if paddle2:GetY() < -13
+            paddle2:SetPosition(12.5, 12, 0)
+        end
+        
+        if paddle2:GetY() > 13
+            paddle2:SetPosition(12.5, -12, 0)
+        end
+
+        if ball:GetZ() > 0 or ball:GetZ() < 0
+            ball:SetZ(0)
+        end
+
+        if player = 5
+            say "You win!"
+            Exit()
+        end
+        if computer = 5
+            say "You lost. Better luck next time."
+            Exit()
+        end
+    end
+
+   action BeginCollision(CollisionEvent3D event)
+        Model itemA = cast(Model, event:GetItemA())
+        Model itemB = cast(Model, event:GetItemB())
+
+       if (itemA = ball and itemB = paddle) or (itemB = ball and itemA = paddle)
+            beep:Pause()
+            force:Set(random:RandomIntegerBetween(-10, 5), random:RandomIntegerBetween(-10, 5), 0)
+            plop:Play()
+            ball:SetLinearVelocity(velocity)
+            ball:ApplyForceToCenter(force)
+            beep:Resume()
+//            output force:GetX()
+       end
+       if (itemA = ball and itemB = paddle2) or (itemB = ball and itemA = paddle2)
+            beep:Pause()
+            force:Set(random:RandomIntegerBetween(-10, 5), random:RandomIntegerBetween(-10, 5), 0)
+            d3:Play()
+            ball:SetLinearVelocity(velocity)
+            ball:ApplyForceToCenter(force)
+            beep:Resume()
+//            output force:GetX()
+        end
+        if (itemA = ball and itemB = left) or (itemB = ball and itemA = left)
+            beep:Pause()
+            force:Set(random:RandomIntegerBetween(-10, 5), random:RandomIntegerBetween(-10, 5), 0)
+            chime:Play()
+            ball:SetPosition(0, 0, 0)
+            ball:SetLinearVelocity(velocity)
+            ball:ApplyForceToCenter(force)
+            player = player + 1
+            beep:Resume()
+//            output force:GetX()
+        end
+         if (itemA = ball and itemB = right) or (itemB = ball and itemA = right)
+            beep:Pause()
+            force:Set(random:RandomIntegerBetween(-10, 5), random:RandomIntegerBetween(-10, 5), 0)
+            splat:Play()
+            ball:SetPosition(0, 0, 0)
+            ball:SetLinearVelocity(velocity)
+            ball:ApplyForceToCenter(force)
+            beep:Resume()
+            computer = computer + 1
+//            output force:GetX()
+        end
+    end
+end
