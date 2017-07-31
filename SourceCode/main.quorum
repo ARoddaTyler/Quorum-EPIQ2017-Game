@@ -108,7 +108,7 @@ class Main is Game, CollisionListener3D
        Add(paddle)
        paddle:EnablePhysics(true)
        paddle:SetFriction(0.1)
-       paddle:SetRestitution(1)
+       paddle:SetRestitution(1.1)
        paddle:SetNonResponsive()
 
        paddle2:SetName("Player Paddle")
@@ -117,7 +117,7 @@ class Main is Game, CollisionListener3D
        Add(paddle2)
        paddle2:EnablePhysics(true)
        paddle2:SetFriction(0.1)
-       paddle2:SetRestitution(1)
+       paddle2:SetRestitution(1.1)
        paddle2:SetNonResponsive()
 
        left:SetName("Left Wall")
