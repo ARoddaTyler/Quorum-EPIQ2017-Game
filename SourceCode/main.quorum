@@ -91,7 +91,10 @@ class Main is Game, CollisionListener3D
        ball:SetPosition(0,1,0)
        Add(ball)
        ball:EnablePhysics(true)
-       //ball:Add(beep)
+//       beep:SetDimensions(1, 1, 1)
+//       beep:EnablePhysics(true)
+//       beep:SetResponsive()
+//       ball:Add(beep)
        beep:Play()
        ball:SetMass(0.1)
        ball:SetResponsive()
@@ -181,11 +184,11 @@ class Main is Game, CollisionListener3D
             ball:SetZ(0)
         end
 
-        if player = 5
+        if player = 3
             say "You win!"
             Exit()
         end
-        if computer = 5
+        if computer = 3
             say "You lost. Better luck next time."
             Exit()
         end
